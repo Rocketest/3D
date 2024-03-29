@@ -165,7 +165,7 @@ def setpoint2(x2, y2, z2):
     Z2 = z2
 cam_x, cam_y, cam_z = 0, 0, 0
 cam_dir_x, cam_dir_y = 0, 0
-view_factor, near_plane = 500, 20
+view_factor, near_plane = 500, 1
 triangles = [[math.inf],[0 - math.inf]]
 keysPressed = {
     'up' : False,
