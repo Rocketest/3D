@@ -20,41 +20,18 @@ def fakeline(x1, y1, z1, x2, y2, z2, points):
     setpoint2((Z2 * cam_dir_y_sin) + (X2 * cam_dir_y_cos), Y2, (Z2 * cam_dir_y_cos) - (X2 * cam_dir_y_sin))
     setpoint1(X1, (Y1 * cam_dir_x_cos) - (Z1 * cam_dir_x_sin), (Y1 * cam_dir_x_sin) + (Z1 * cam_dir_x_cos))
     setpoint2(X2, (Y2 * cam_dir_x_cos) - (Z2 * cam_dir_x_sin), (Y2 * cam_dir_x_sin) + (Z2 * cam_dir_x_cos))
-    if not((Z1 < near_plane) and (Z2 < near_plane)):
+    if (Z1 < near_plane) and (Z2 < near_plane):
+        return []
+    else:
         z_clipping()
         try:
-            points.append(int(view_factor * (X1/Z1)))
-        except:
-            pass
-        try:
-            points.append(int(view_factor * (Y1/Z1)))
-        except:
-            pass
-        try:
-            points.append(int(view_factor * (X2/Z2)))
-        except:
-            pass
-        try:
-            points.append(int(view_factor * (Y2/Z2)))
+            points.append(view_factor * (X1/Z1))
+            points.append(view_factor * (Y1/Z1))
+            points.append(view_factor * (X2/Z2))
+            points.append(view_factor * (Y2/Z2))
         except:
             pass
         return points
-def lline(x1, y1, z1, x2, y2, z2, size):
-    global X1, Y1, Z1, X2, Y2, Z2
-    setpoint1((x1 - cam_x), (y1 - cam_y), (z1 - cam_z))
-    setpoint2((x2 - cam_x), (y2 - cam_y), (z2 - cam_z))
-    setpoint1((Z1 * cam_dir_y_sin) + (X1 * cam_dir_y_cos), Y1, (Z1 * cam_dir_y_cos) - (X1 * cam_dir_y_sin))
-    setpoint2((Z2 * cam_dir_y_sin) + (X2 * cam_dir_y_cos), Y2, (Z2 * cam_dir_y_cos) - (X2 * cam_dir_y_sin))
-    setpoint1(X1, (Y1 * cam_dir_x_cos) - (Z1 * cam_dir_x_sin), (Y1 * cam_dir_x_sin) + (Z1 * cam_dir_x_cos))
-    setpoint2(X2, (Y2 * cam_dir_x_cos) - (Z2 * cam_dir_x_sin), (Y2 * cam_dir_x_sin) + (Z2 * cam_dir_x_cos))
-    if not((Z1 < near_plane) and (Z2 < near_plane)):
-        z_clipping()
-        pensize(abs(view_factor * (size / ((z1 + z2) / 2))))
-        penup()
-        goto(view_factor * (X1/Z1), view_factor * (Y1/Z1))
-        pendown()
-        goto(view_factor * (X2/Z2), view_factor * (Y2/Z2))
-        penup()
 def line(x1, y1, x2, y2):
         penup()
         goto(x1, y1)
@@ -80,6 +57,7 @@ def drawtriangle(dist, x1, y1, z1, x2, y2, z2, x3, y3, z3, color, pcolor=""):
     points = fakeline(x1, y1, z1, x2, y2, z2, [])
     points = fakeline(x2, y2, z2, x3, y3, z3, points)
     points = fakeline(x3, y3, z3, x1, y1, z1, points)
+    points = fakeline(x1, y1, z1, x2, y2, z2, points)
     i = 0
     if points != None:
         n = len(points)
@@ -88,11 +66,7 @@ def drawtriangle(dist, x1, y1, z1, x2, y2, z2, x3, y3, z3, color, pcolor=""):
     begin_fill()
     while i < n:
         pensize(2)
-        penup()
-        goto(points[i], points[(i + 1) % n])
-        pendown()
-        goto(points[(i + 2) % n], points[(i + 3) % n])
-        penup()
+        line(points[i % n], points[(i + 1) % n], points[(i + 2) % n], points[(i + 3) % n])
         i += 2
     end_fill()
 def addtriangle(x1, y1, z1, x2, y2, z2, x3, y3, z3, color, pcolor=""):
@@ -105,6 +79,7 @@ def addtriangle(x1, y1, z1, x2, y2, z2, x3, y3, z3, color, pcolor=""):
         i += 1
     triangles.insert(i, [dist, x1, y1, z1, x2, y2, z2, x3, y3, z3, color, pcolor])
 def draw():
+    global triangles
     while len(triangles) > 2:
             drawtriangle(triangles[1][0], triangles[1][1], triangles[1][2], triangles[1][3], triangles[1][4], triangles[1][5], triangles[1][6], triangles[1][7], triangles[1][8], triangles[1][9], triangles[1][10], triangles[1][11])
             triangles.pop(1)
@@ -150,19 +125,19 @@ def z_clipping():
     if (Z1 < near_plane) or (Z2 < near_plane):
         percent = (near_plane - Z1)/(Z2 - Z1)
         if Z1 < near_plane:
-            setpoint1(X1 + ((X2 - X1) * percent), Y1 + ((Y2 - Y1) * percent), near_plane)
+            setpoint1((X1 + ((X2 - X1) * percent)), (Y1 + ((Y2 - Y1) * percent)), near_plane)
         elif Z2 < near_plane:
-            setpoint2(X1 + ((X2 - X1) * percent), Y1 + ((Y2 - Y1) * percent), near_plane)
+            setpoint2((X1 + ((X2 - X1) * percent)), (Y1 + ((Y2 - Y1) * percent)), near_plane)
 def setpoint1(x1, y1, z1):
     global X1, Y1, Z1
-    X1 = x1
-    Y1 = y1
-    Z1 = z1
+    X1 = float(x1)
+    Y1 = float(y1)
+    Z1 = float(z1)
 def setpoint2(x2, y2, z2):
     global X2, Y2, Z2
-    X2 = x2
-    Y2 = y2
-    Z2 = z2
+    X2 = float(x2)
+    Y2 = float(y2)
+    Z2 = float(z2)
 cam_x, cam_y, cam_z = 0, 0, 0
 cam_dir_x, cam_dir_y = 0, 0
 view_factor, near_plane = 500, 1
